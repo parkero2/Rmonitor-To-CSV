@@ -16,6 +16,9 @@ class competitor:
         self.reg_num = reg_num
         self.num = num
         self.trans_num = trans_num
+        if (first_name == ""):
+            self.first_name = last_name.split(" ")[0]
+            last_name = " ".join(last_name.split(" ")[1:])
         self.first_name = first_name
         self.last_name = last_name
         self.nationality = nationality
@@ -45,7 +48,7 @@ def parse_stream(line : str):
         competitors.append(competitor(line[1], line[2], line[3], line[4], line[5], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
-        header += f"Name{racers}, Short Name{racers}, Car{racers}"
+        header += f"Name{racers}, Short Name{racers}, Car{racers}, "
         regos.append(line[1])
         print(f"Added competitor {line[4]} {line[5]} rego {line[1]}")
 
