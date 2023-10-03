@@ -29,7 +29,7 @@ def position_update():
     global positions, outfile, header, racers
     with open('output_summary.txt', "+a") as f:
         for i in range(racers):
-            f.write(f"{positions[i].first_name} {positions[i].last_name}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].num}\n")
+            f.write(f"{positions[i].first_name} {positions[i].last_name}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].num}")
         f.write("\n")
     lines_to_write = []
     for i in range(racers):
@@ -39,34 +39,38 @@ def position_update():
 
 def parse_stream(line : str):
     global competitors, racers, header, positions, regos
+    if (len(line.split('$A')) > 1):
+        for i in range(len(line.split('$A'))):
+            parse_stream(line.split('$A')[i])
+        return
+    if (len(line.split('$G')) > 1):
+        for i in range(len(line.split('$G'))):
+            parse_stream(line.split('$G')[i])
+        return
     line = line.split(',')
     if (line[0] == "$A"):
+        print(line,"\n")
         # Competitor
-        reg_num = line[1]
-        if any(comp.reg_num == reg_num for comp in competitors):
+        if (line[1] in regos):
             return
-        
-        competitors.append(competitor(reg_num, line[2], line[3], line[4], line[5], line[6], line[7]))
+    
+        competitors.append(competitor(line[1], line[2], line[3], line[4], line[5], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
         header += f"Name{racers}, Short Name{racers}, Car{racers}, "
-        print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
+        regos.append(line[1])
+        print(f"Added competitor {line[4]} {line[5]} rego {line[1]}")
 
     if (line[0] == "$G"):
+        print(line,"\n")
         # position change
         racer = None
         for i in range(len(positions)):
             if (positions[i].reg_num == line[2]):
                 racer = i 
-                break
-        new_pos = int(line[1]) - 1
-        if racer is not None:
-            if new_pos < racer:
-                positions.insert(new_pos, positions[racer])
-                positions.pop(racer + 1)
-            elif new_pos > racer:
-                positions.insert(new_pos, positions[racer])
-                positions.pop(racer)
+                
+            positions.insert(int(line[1]) - 1, positions[i])
+            positions.pop(i)
             position_update()
 
 # TESTING
@@ -78,10 +82,10 @@ def parse_stream(line : str):
 # print(len(competitors))
 
 if __name__ == "__main__":
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ADDRESS, PORT))
-    while True:
-        data = s.recv(1024)
-        if not data:
-            break
-        parse_stream(data.decode('utf-8'))
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((ADDRESS, PORT))
+            while True:
+                data = s.recv(1024)
+                if not data:
+                    break
+                parse_stream(data.decode('utf-8'))
