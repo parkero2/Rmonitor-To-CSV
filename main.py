@@ -3,10 +3,12 @@ import time
 
 positions = [] # Array of competitor objects
 racers = 0
-header = ""
+header = "Laps, Race Name, Race Category,"
 outfile = open("output.csv", "w")
 competitors = []
 regos = []
+highest_lap = 0
+race_name = ""
 
 ADDRESS = "127.0.0.1"
 PORT = 50000
@@ -26,19 +28,21 @@ class competitor:
 
 def position_update():
     # Updates the CSV
-    global positions, outfile, header, racers
-    with open('output_summary.txt', "+a") as f:
-        for i in range(racers):
-            f.write(f"{positions[i].first_name} {positions[i].last_name}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].num}\n")
-        f.write("\n")
-    lines_to_write = []
-    for i in range(racers):
-        lines_to_write.append(f"{positions[i].first_name} {positions[i].last_name}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].num}")
+    # Laps	Race Name	Race Category	Name1	        Short1	Reg1
+    # 51/54	Formula 1	Bikes	        Lewis Hamilton	L.HAM	4
+    global positions, outfile, header, racers, highest_lap, race_name
+    linesToWrite = [f"{highest_lap}, {race_name}, Bikes "]
     outfile.seek(0)
-    outfile.write("\n".join([header, ",".join(lines_to_write)]))
+    outfile.write(header)
+    outfile.write("\n")
+    for i in range(racers):
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num}")
+    outfile.write(",".join(linesToWrite))
+    outfile.flush()
+    print("Updated positions")
 
 def parse_stream(line : str):
-    global competitors, racers, header, positions, regos
+    global competitors, racers, header, positions, regos, highest_lap
     line = line.split(',')
     if (line[0] == "$A"):
         # Competitor
@@ -52,6 +56,11 @@ def parse_stream(line : str):
         header += f"Name{racers}, Short Name{racers}, Car{racers}, "
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
 
+    if (line[0] == "$C"):
+        global race_name
+        print(line)
+        race_name = line[2][:-2]
+
     if (line[0] == "$G"):
         # position change
         racer = None
@@ -61,6 +70,7 @@ def parse_stream(line : str):
                 break
         new_pos = int(line[1]) - 1
         if racer is not None:
+            highest_lap = max(highest_lap, int(line[3]) if line[3] != "" else -1)
             if new_pos < racer:
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer + 1)
@@ -69,13 +79,11 @@ def parse_stream(line : str):
                 positions.pop(racer)
             position_update()
 
-# TESTING
-# with open("sample.txt", "r") as f:
-#     for line in f:
-#         parse_stream(line)
-#         time.sleep(0.00001)
-
-# print(len(competitors))
+if True:
+    with open('sample.txt', 'r') as f:
+        for line in f:
+            parse_stream(line)
+            time.sleep(0.0001)
 
 if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
