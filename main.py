@@ -40,7 +40,7 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name[1:-1]}, {positions[i].reg_num}")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
@@ -55,7 +55,7 @@ def parse_stream(line : str):
         if any(comp.reg_num == reg_num for comp in competitors):
             return
         
-        competitors.append(competitor(reg_num, line[2], line[3], line[4], line[5], line[6], line[7]))
+        competitors.append(competitor(reg_num, line[2], line[3][1:-1], line[4][1:-1], line[5][1:-1], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
         header += f"Name{racers}, Short Name{racers}, Car{racers}, "
