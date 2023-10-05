@@ -31,12 +31,16 @@ def position_update():
     # Laps	Race Name	Race Category	Name1	        Short1	Reg1
     # 51/54	Formula 1	Bikes	        Lewis Hamilton	L.HAM	4
     global positions, outfile, header, racers, highest_lap, race_name
-    linesToWrite = [f"{highest_lap}, {race_name}, Bikes "]
+    if (race_name == ""):
+        rn = "NotSet"
+    else:
+        rn = race_name
+    linesToWrite = [f"{highest_lap}, {rn}, Bikes "]
     outfile.seek(0)
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num}")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name[1:-1]}, {positions[i].reg_num}")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
@@ -47,6 +51,7 @@ def parse_stream(line : str):
     if (line[0] == "$A"):
         # Competitor
         reg_num = line[1]
+        print(line)
         if any(comp.reg_num == reg_num for comp in competitors):
             return
         
@@ -59,7 +64,8 @@ def parse_stream(line : str):
     if (line[0] == "$C"):
         global race_name
         print(line)
-        race_name = line[2][:-2]
+        if race_name == "":
+            race_name = line[2].split('"')[1]
 
     if (line[0] == "$G"):
         # position change
@@ -79,7 +85,7 @@ def parse_stream(line : str):
                 positions.pop(racer)
             position_update()
 
-if True:
+if False:
     with open('sample.txt', 'r') as f:
         for line in f:
             parse_stream(line)
@@ -92,4 +98,6 @@ if __name__ == "__main__":
         data = s.recv(1024)
         if not data:
             break
-        parse_stream(data.decode('utf-8'))
+        d = data.decode("utf-8")
+        for line in d.split("\n"):
+            parse_stream(line)
