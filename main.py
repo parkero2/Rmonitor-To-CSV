@@ -1,3 +1,4 @@
+import tkinter as tk
 import socket
 import time
 
@@ -13,6 +14,66 @@ race_name = ""
 ADDRESS = "127.0.0.1"
 PORT = 50000
 
+class Application(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.pack()
+        self.create_widgets()
+
+    def create_widgets(self):
+        # IP address input field
+        self.ip_label = tk.Label(self, text="IP Address:")
+        self.ip_label.pack(side="left")
+        self.ip_entry = tk.Entry(self)
+        self.ip_entry.pack(side="left")
+
+        # Port number input field
+        self.port_label = tk.Label(self, text="Port Number:")
+        self.port_label.pack(side="left")
+        self.port_entry = tk.Entry(self)
+        self.port_entry.pack(side="left")
+
+        # Connect button
+        self.connect_button = tk.Button(self, text="Connect", command=self.connect)
+        self.connect_button.pack(side="left")
+
+        # Disconnect button
+        self.disconnect_button = tk.Button(self, text="Disconnect", command=self.disconnect, state="disabled")
+        self.disconnect_button.pack(side="left")
+
+        # Quit button
+        self.quit_button = tk.Button(self, text="Quit", fg="red", command=self.master.destroy)
+        self.quit_button.pack(side="left")
+
+        # Output section
+        self.output_label = tk.Label(self, text="Output:")
+        self.output_label.pack()
+        self.output_text = tk.Text(self, height=10, width=50)
+        self.output_text.pack()
+
+        # RMonitor log section
+        self.log_label = tk.Label(self, text="RMonitor Log:")
+        self.log_label.pack()
+        self.log_text = tk.Text(self, height=10, width=50)
+        self.log_text.pack()
+
+    def connect(self):
+        global ADDRESS, PORT
+        ADDRESS = self.ip_entry.get()
+        PORT = int(self.port_entry.get())
+        # TODO: Implement connection logic here
+        self.connect_button.config(state="disabled")
+        self.disconnect_button.config(state="normal")
+
+    def disconnect(self):
+        # TODO: Implement disconnection logic here
+        self.connect_button.config(state="normal")
+        self.disconnect_button.config(state="disabled")
+
+root = tk.Tk()
+app = Application(master=root)
+app.mainloop()
 class competitor:
     def __init__(self, reg_num, num, trans_num, first_name, last_name, nationality, class_num) -> None:
         self.reg_num = reg_num
