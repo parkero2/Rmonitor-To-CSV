@@ -93,7 +93,8 @@ class Application(tk.Frame):
 
 root = tk.Tk()
 app = Application(master=root)
-app.mainloop()
+#app.mainloop()
+
 class competitor:
     def __init__(self, reg_num, num, trans_num, first_name, last_name, nationality, class_num) -> None:
         self.reg_num = reg_num
