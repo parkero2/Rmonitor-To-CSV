@@ -1,5 +1,11 @@
 import socket
 import time
+import socketserver
+import flask
+import threading
+import asyncio
+from aiohttp import web
+from pythonosc import udp_client
 
 positions = [] # Array of competitor objects
 racers = 0
@@ -9,6 +15,20 @@ competitors = []
 regos = []
 highest_lap = 0
 race_name = ""
+
+#OSC STUFF
+OSCIP, OSCPORT = "127.0.0.1", 50000
+OSCMSG = {
+    "red": "/red",
+    "yellow": "/yellow",
+    "green": "/green",
+    "purple": "/purple",
+    "checkered": "/checkered"
+}
+
+flag = OSCMSG["green"]
+
+OSCUDP_CLIENT = udp_client.SimpleUDPClient(OSCIP, OSCPORT)
 
 ADDRESS = "127.0.0.1"
 PORT = 50000
@@ -40,13 +60,13 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
 
 def parse_stream(line : str):
-    global competitors, racers, header, positions, regos, highest_lap
+    global competitors, racers, header, positions, regos, highest_lap, flag, OSCMSG
     line = line.split(',')
     if (line[0] == "$A"):
         # Competitor
@@ -58,7 +78,7 @@ def parse_stream(line : str):
         competitors.append(competitor(reg_num, line[2], line[3][1:-1], line[4][1:-1], line[5][1:-1], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
-        header += f"Name{racers}, Short Name{racers}, Car{racers}, "
+        header += f"Name{racers}, Short Name{racers}, Car{racers}, Laps{racers},"
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
 
     if (line[0] == "$C"):
@@ -76,14 +96,24 @@ def parse_stream(line : str):
                 break
         new_pos = int(line[1]) - 1
         if racer is not None:
-            highest_lap = max(highest_lap, int(line[3]) if line[3] != "" else -1)
+            #highest_lap = max(highest_lap, int(line[3]) if line[3] != "" else -1)
             if new_pos < racer:
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer + 1)
             elif new_pos > racer:
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer)
-            position_update()
+            position_update() 
+    if (line[0] == "$F"):
+        highest_lap = int(line[1])
+        flag = OSCMSG[line[5].lower()]
+        bcast_OSC()
+
+def bcast_OSC():
+    # OSC
+    global flag, OSCUDP_CLIENT
+    OSCUDP_CLIENT.send_message(flag, 1)
+
 
 if False:
     with open('sample.txt', 'r') as f:
@@ -91,9 +121,19 @@ if False:
             parse_stream(line)
             time.sleep(0.0001)
 
-if __name__ == "__main__":
+# SERVER STUFF DON'T TOUCH IT'S PROBABLY WORKING
+
+WSHOST, WSPORT, SOCKHOST, SOCKPORT = "127.0.0.1", 8080, "127.0.0.1", 9999
+
+async def main():
+    global ADDRESS, PORT
+    # Run runServer() asynchronusly
+
+    # Connect to the socket server
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((ADDRESS, PORT))
+
+    # Process incoming data from the socket server
     while True:
         data = s.recv(1024)
         if not data:
@@ -101,3 +141,6 @@ if __name__ == "__main__":
         d = data.decode("utf-8")
         for line in d.split("\n"):
             parse_stream(line)
+
+if __name__ == "__main__":
+    asyncio.run(main())
