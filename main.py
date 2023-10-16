@@ -1,5 +1,6 @@
 import socket
 import time
+from datetime import datetime
 
 positions = [] # Array of competitor objects
 racers = 0
@@ -9,6 +10,7 @@ competitors = []
 regos = []
 highest_lap = 0
 race_name = ""
+best_time = ""
 
 ADDRESS = "115.188.181.165"
 PORT = 50000
@@ -28,12 +30,13 @@ class competitor:
         self.lap = 0
         self.best_lap = 0
         self.last_lap_time = ""
+        self.timeBehind = 0
 
 def position_update():
     # Updates the CSV
     # Laps	Race Name	Race Category	Name1	        Short1	Reg1
     # 51/54	Formula 1	Bikes	        Lewis Hamilton	L.HAM	4
-    global positions, outfile, header, racers, highest_lap, race_name
+    global positions, outfile, header, racers, highest_lap, race_name, best_time
     if (race_name == ""):
         rn = "NotSet"
     else:
@@ -43,13 +46,13 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, {positions[i].lap}, {positions[i].best_lap}, {positions[i].last_lap_time}")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, {positions[i].lap}, {positions[i].best_lap}, {positions[i].last_lap_time}, {best_time if i == 0 else positions[i].timeBehind},")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
 
 def parse_stream(line : str):
-    global competitors, racers, header, positions, regos, highest_lap, race_name
+    global competitors, racers, header, positions, regos, highest_lap, race_name, best_time
     line = line.split(',')
     if (line[0] == "$B"):
         race_name = line[2].strip("\r").strip('"')
@@ -63,7 +66,7 @@ def parse_stream(line : str):
         competitors.append(competitor(reg_num, line[2], line[3][1:-1], line[4][1:-1], line[5][1:-1], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
-        header += f"Name{racers}, Short Name{racers}, Car{racers}, Lap{racers}, Best Lap{racers}, Best Lap Time{racers},"
+        header += f"Name{racers}, Short Name{racers}, Car{racers}, Lap{racers}, Best Lap{racers}, Best Lap Time{racers}, delay{racers},"
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
         position_update()
 
@@ -85,6 +88,13 @@ def parse_stream(line : str):
             elif new_pos > racer:
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer)
+
+            # If pos #1, update best time to that time, else calculate the time difference in a datetime object
+            if new_pos == 0:
+                best_time = datetime.strptime(line[4].strip("\r").strip('"'), "%H:%M:%S.%f")
+                positions[new_pos].timeBehind = -1
+            elif (best_time != ""):
+                positions[new_pos].timeBehind = datetime.strptime(line[4].strip("\r").strip('"'), "%H:%M:%S.%f") - best_time
             position_update()
 
     if (line[0] == "$H"):
