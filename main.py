@@ -125,7 +125,7 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time},")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time}".strip("\n"))
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
@@ -176,8 +176,9 @@ def parse_stream(line : str):
         # find by rego (line[2])
         for i in range(len(positions)):
             if (positions[i].reg_num == line[2]):
-                positions[i].best_lap = line[3]
-                positions[i].best_time = line[4]
+                positions[i].best_lap = line[3].strip('\n')
+                positions[i].best_time = line[4].strip('"').split('\n')[0]
+                print(f"Best lap for {positions[i].first_name} {positions[i].last_name} is {positions[i].best_lap} at {positions[i].best_time}")
                 break
         position_update()
 
