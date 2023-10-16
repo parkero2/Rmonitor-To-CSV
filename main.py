@@ -115,20 +115,21 @@ def position_update():
     # Laps	Race Name	Race Category	Name1	        Short1	Reg1
     # 51/54	Formula 1	Bikes	        Lewis Hamilton	L.HAM	4
     global positions, outfile, header, racers, highest_lap, race_name
-    print("Updating positions")
+    # print("Updating positions")
     if (race_name == ""):
         rn = "NotSet"
     else:
         rn = race_name
-    linesToWrite = [f"{highest_lap}, {rn}, Bikes "]
+    linesToWrite = f"{highest_lap}, {rn}, Bikes, "
     outfile.seek(0)
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time}".strip("\n"))
-    outfile.write(",".join(linesToWrite))
+        linesToWrite += (f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time},".strip("\n").strip('"').split('\r')[0])
+    outfile.write(linesToWrite.strip("\n"))
+    print(linesToWrite.strip("\n"))
     outfile.flush()
-    print("Updated positions")
+    # print("Updated positions")
 
 def parse_stream(line : str):
     global competitors, racers, header, positions, regos, highest_lap, flag, OSCMSG
@@ -136,7 +137,7 @@ def parse_stream(line : str):
     if (line[0] == "$A"):
         # Competitor
         reg_num = line[1]
-        print(line)
+        # print(line)
         if any(comp.reg_num == reg_num for comp in competitors):
             return
         
@@ -144,12 +145,12 @@ def parse_stream(line : str):
         positions.append(competitors[-1])
         racers = len(competitors)
         header += f"Name{racers}, Short Name{racers}, Car{racers}, Laps{racers}, BestLap{racers}, BestTime{racers},"
-        print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
+        # print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
         position_update()
 
     if (line[0] == "$C"):
         global race_name
-        print(line)
+        # print(line)
         if race_name == "":
             race_name = line[2].split('"')[1]
 
@@ -178,7 +179,7 @@ def parse_stream(line : str):
             if (positions[i].reg_num == line[2]):
                 positions[i].best_lap = line[3].strip('\n')
                 positions[i].best_time = line[4].strip('"').split('\n')[0]
-                print(f"Best lap for {positions[i].first_name} {positions[i].last_name} is {positions[i].best_lap} at {positions[i].best_time}")
+                # print(f"Best lap for {positions[i].first_name} {positions[i].last_name} is {positions[i].best_lap} at {positions[i].best_time}")
                 break
         position_update()
 
