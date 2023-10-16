@@ -47,8 +47,10 @@ def position_update():
     print("Updated positions")
 
 def parse_stream(line : str):
-    global competitors, racers, header, positions, regos, highest_lap
+    global competitors, racers, header, positions, regos, highest_lap, race_name
     line = line.split(',')
+    if (line[0] == "$B"):
+        race_name = line[2].strip("\r").strip('"')
     if (line[0] == "$A"):
         # Competitor
         reg_num = line[1]
@@ -62,12 +64,6 @@ def parse_stream(line : str):
         header += f"Name{racers}, Short Name{racers}, Car{racers}, Lap{racers},"
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
         position_update()
-
-    if (line[0] == "$C"):
-        global race_name
-        print(line)
-        if race_name == "":
-            race_name = line[2].split('"')[1]
 
     if (line[0] == "$G"):
         # position change
