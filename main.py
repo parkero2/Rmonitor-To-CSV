@@ -40,7 +40,7 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
