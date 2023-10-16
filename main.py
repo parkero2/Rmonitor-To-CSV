@@ -107,6 +107,8 @@ class competitor:
         self.last_name = last_name
         self.nationality = nationality
         self.class_num = class_num
+        self.best_lap = None
+        self.best_time = None
 
 def position_update():
     # Updates the CSV
@@ -123,7 +125,7 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[1]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time},")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
@@ -141,7 +143,7 @@ def parse_stream(line : str):
         competitors.append(competitor(reg_num, line[2], line[3][1:-1], line[4][1:-1], line[5][1:-1], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
-        header += f"Name{racers}, Short Name{racers}, Car{racers}, Laps{racers},"
+        header += f"Name{racers}, Short Name{racers}, Car{racers}, Laps{racers}, BestLap{racers}, BestTime{racers},"
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
         position_update()
 
@@ -168,6 +170,17 @@ def parse_stream(line : str):
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer)
             position_update() 
+
+    if (line[0] == "$H"):
+        # $H,2,”1234BE”,3,”00:02:17.872”
+        # find by rego (line[2])
+        for i in range(len(positions)):
+            if (positions[i].reg_num == line[2]):
+                positions[i].best_lap = line[3]
+                positions[i].best_time = line[4]
+                break
+        position_update()
+
     # if (line[0] == "$F"):
     #     highest_lap = int(line[1])
     #     flag = OSCMSG[line[5].lower()]
