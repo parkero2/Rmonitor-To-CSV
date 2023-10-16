@@ -26,6 +26,8 @@ class competitor:
         self.nationality = nationality
         self.class_num = class_num
         self.lap = 0
+        self.best_lap = 0
+        self.last_lap_time = ""
 
 def position_update():
     # Updates the CSV
@@ -41,7 +43,7 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, {positions[i].lap}")
+        linesToWrite.append(f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, {positions[i].lap}, {positions[i].best_lap}, {positions[i].last_lap_time}")
     outfile.write(",".join(linesToWrite))
     outfile.flush()
     print("Updated positions")
@@ -61,7 +63,7 @@ def parse_stream(line : str):
         competitors.append(competitor(reg_num, line[2], line[3][1:-1], line[4][1:-1], line[5][1:-1], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
-        header += f"Name{racers}, Short Name{racers}, Car{racers}, Lap{racers},"
+        header += f"Name{racers}, Short Name{racers}, Car{racers}, Lap{racers}, Best Lap{racers}, Best Lap Time{racers},"
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
         position_update()
 
@@ -84,6 +86,21 @@ def parse_stream(line : str):
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer)
             position_update()
+
+    if (line[0] == "$H"):
+        #$H,2,”1234BE”,3,”00:02:17.872”
+        # lap time
+        racer = None
+        for i in range(len(positions)):
+            if (positions[i].reg_num == line[2]):
+                racer = i 
+                break
+        if racer is not None:
+            print(line)
+            positions[racer].last_lap_time = line[4].strip("\r").strip('"')
+            position_update()
+
+
 
 if False:
     with open('sample.txt', 'r') as f:
