@@ -125,7 +125,7 @@ def position_update():
     outfile.write(header)
     outfile.write("\n")
     for i in range(racers):
-        linesToWrite += (f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time},".strip("\n").strip('"').split('\r')[0])
+        linesToWrite += (f"{str(positions[i].first_name + ' ' + positions[i].last_name)}, {positions[i].first_name}, {positions[i].last_name}, {positions[i].first_name[0]}.{positions[i].last_name}, {positions[i].reg_num[1:-1]}, ?, {positions[i].best_lap}, {positions[i].best_time},".strip("\n").strip('"').split('\r')[0])
     outfile.write(linesToWrite.strip("\n"))
     print(linesToWrite.strip("\n"))
     outfile.flush()
@@ -144,7 +144,7 @@ def parse_stream(line : str):
         competitors.append(competitor(reg_num, line[2], line[3][1:-1], line[4][1:-1], line[5][1:-1], line[6], line[7]))
         positions.append(competitors[-1])
         racers = len(competitors)
-        header += f"Name{racers}, Short Name{racers}, Car{racers}, Laps{racers}, BestLap{racers}, BestTime{racers},"
+        header += f"Name{racers}, FName{racers}, LName{racers}, Short Name{racers}, Car{racers}, Laps{racers}, BestLap{racers}, BestTime{racers},"
         # print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
         position_update()
 
@@ -164,6 +164,7 @@ def parse_stream(line : str):
         new_pos = int(line[1]) - 1
         if racer is not None:
             #highest_lap = max(highest_lap, int(line[3]) if line[3] != "" else -1)
+            highest_lap = int(line[3])
             if new_pos < racer:
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer + 1)
