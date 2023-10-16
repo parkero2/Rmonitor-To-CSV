@@ -31,7 +31,7 @@ flag = OSCMSG["green"]
 
 OSCUDP_CLIENT = udp_client.SimpleUDPClient(OSCIP, OSCPORT)
 
-ADDRESS = "127.0.0.1"
+ADDRESS = "115.188.181.165"
 PORT = 50000
 
 class Application(tk.Frame):
@@ -113,6 +113,7 @@ def position_update():
     # Laps	Race Name	Race Category	Name1	        Short1	Reg1
     # 51/54	Formula 1	Bikes	        Lewis Hamilton	L.HAM	4
     global positions, outfile, header, racers, highest_lap, race_name
+    print("Updating positions")
     if (race_name == ""):
         rn = "NotSet"
     else:
@@ -142,6 +143,7 @@ def parse_stream(line : str):
         racers = len(competitors)
         header += f"Name{racers}, Short Name{racers}, Car{racers}, Laps{racers},"
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
+        position_update()
 
     if (line[0] == "$C"):
         global race_name
@@ -166,10 +168,10 @@ def parse_stream(line : str):
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer)
             position_update() 
-    if (line[0] == "$F"):
-        highest_lap = int(line[1])
-        flag = OSCMSG[line[5].lower()]
-        bcast_OSC()
+    # if (line[0] == "$F"):
+    #     highest_lap = int(line[1])
+    #     flag = OSCMSG[line[5].lower()]
+    #     bcast_OSC()
 
 def bcast_OSC():
     # OSC
