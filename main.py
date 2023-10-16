@@ -10,7 +10,7 @@ regos = []
 highest_lap = 0
 race_name = ""
 
-ADDRESS = "127.0.0.1"
+ADDRESS = "115.188.181.165"
 PORT = 50000
 
 class competitor:
@@ -60,6 +60,7 @@ def parse_stream(line : str):
         racers = len(competitors)
         header += f"Name{racers}, Short Name{racers}, Car{racers}, "
         print(f"Added competitor {line[4]} {line[5]} rego {reg_num}")
+        position_update()
 
     if (line[0] == "$C"):
         global race_name
@@ -76,7 +77,8 @@ def parse_stream(line : str):
                 break
         new_pos = int(line[1]) - 1
         if racer is not None:
-            highest_lap = max(highest_lap, int(line[3]) if line[3] != "" else -1)
+            print(line[3])
+            highest_lap = max(highest_lap, int(line[3]) if line[3] != "" else 0)
             if new_pos < racer:
                 positions.insert(new_pos, positions[racer])
                 positions.pop(racer + 1)
