@@ -181,26 +181,11 @@ def parse_stream(line : str):
                 break
         position_update()
 
-    # if (line[0] == "$F"):
-    #     highest_lap = int(line[1])
-    #     flag = OSCMSG[line[5].lower()]
-    #     bcast_OSC()
-
-def bcast_OSC():
-    # OSC
-    global flag, OSCUDP_CLIENT
-    OSCUDP_CLIENT.send_message(flag, 1)
-
-
 if False:
     with open('sample.txt', 'r') as f:
         for line in f:
             parse_stream(line)
             time.sleep(0.0001)
-
-# SERVER STUFF DON'T TOUCH IT'S PROBABLY WORKING
-
-WSHOST, WSPORT, SOCKHOST, SOCKPORT = "127.0.0.1", 8080, "127.0.0.1", 9999
 
 async def main():
     global ADDRESS, PORT
